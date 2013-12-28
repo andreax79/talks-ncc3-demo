@@ -16,9 +16,17 @@ module.exports.total = total;
 function list (req, res) {
     var offset = ~~req.query.offset || 0;
     var limit = ~~req.query.limit || 25;
-    Car.find().skip(offset*limit).limit(limit).lean().exec(function (err, users) {
-        return res.end(JSON.stringify(users));
-    });
+    var orderBy = req.query.orderBy || "title";
+    var reverse = req.query.reverse == "true";
+    if (reverse)
+        orderBy = "-" + orderBy;
+    Car.find().skip(offset*limit)
+        .limit(limit)
+        .lean()
+        .sort(orderBy)
+        .exec(function (err, users) {
+            return res.end(JSON.stringify(users));
+        });
 }
 
 function create (req, res) {
