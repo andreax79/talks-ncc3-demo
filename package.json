@@ -24,6 +24,5 @@
   "devDependencies": {
     "superagent": "~0.12.4",
     "reload": "0.1.0",
-    "chai": "~1.5.0"
   }
 }

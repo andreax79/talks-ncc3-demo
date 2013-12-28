@@ -1,4 +1,5 @@
-var CarApp = angular.module('CarApp', ['ngResource'])
+
+var CarApp = angular.module('CarApp', ['ngRoute', 'ngResource'])
 
 CarApp.config(function($routeProvider, $locationProvider) {
   $routeProvider
