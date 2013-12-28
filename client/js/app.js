@@ -3,14 +3,14 @@ var CarApp = angular.module('CarApp', ['ngResource'])
 CarApp.config(function($routeProvider, $locationProvider) {
   $routeProvider
     .when('/', {controller: ListCtrl, templateUrl: '/partials/list.html'}) 
-    .when('/edit/:id', {controller: EditCtrl, templateUrl: '/partials/details.html'})
+    .when('/edit/:_id', {controller: EditCtrl, templateUrl: '/partials/details.html'})
     .when('/new', {controller: CreateCtrl, templateUrl: '/partials/details.html'})
-    .otherwise({redirectTo: '/'})
+    .otherwise({redirectTo: '/'});
     $locationProvider.html5Mode(true)
 })
 
 CarApp.factory('CarsService', function($resource) {
-  return $resource('/api/cars/:id', {id: '@id'}, {update: {method: 'PUT'}})
+  return $resource('/api/cars/:_id', {_id: '@_id'}, {update: {method: 'PUT'}})
 })
 
 CarApp.filter('mileage', function() {
@@ -64,5 +64,4 @@ CarApp.directive('formfield2', function() {
     replace: true
   }
 })
-
 

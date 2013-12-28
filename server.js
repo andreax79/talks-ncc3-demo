@@ -1,11 +1,12 @@
 if (!process.env.NODE_ENV) process.env.NODE_ENV='development'
 
-var express = require('express')
+var express = require('express') // web framework
   , http = require('http')
   , path = require('path')
-  , reload = require('reload')
+  , reload = require('reload') // reload browser when codechanges
+  , colors = require('colors') // get colors in console
+  , db = require('./server/model/db')
   , cars = require('./server/api/cars')
-  , colors = require('colors')
 
 var app = express()
 
@@ -44,7 +45,8 @@ var server = http.createServer(app)
 reload(server, app)
 
 server.listen(app.get('port'), function(){
-  console.log("Web server listening in %s on port %d", colors.red(process.env.NODE_ENV), app.get('port'));
+  console.log("Web server listening in %s on port %d",
+    colors.red(process.env.NODE_ENV), app.get('port'));
 });
 
 

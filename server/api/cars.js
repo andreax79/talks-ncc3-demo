@@ -1,113 +1,96 @@
-var fs = require('fs-extra')
-  , path = require('path')
-  , _ = require('underscore')
+var _ = require('underscore'), // helper
+    mongoose = require('mongoose'),
+    Car = mongoose.model('Car'); // model
 
-module.exports.list = list
-module.exports.create = create
-module.exports.read = read
-module.exports.update = update
-module.exports.del = del
-module.exports.total = total
-
-var DATA_FILE = './resources/data.json'
-if (process.env.NODE_ENV === 'test') 
-  DATA_FILE = './test/resources/data.json'
-
-var DATA = fs.readJsonSync(DATA_FILE) //happens at server startup
+module.exports.list = list;
+module.exports.create = create;
+module.exports.read = read;
+module.exports.update = update;
+module.exports.del = del;
+module.exports.total = total;
 
 /**********************
  * Public Interface
  **********************/
 
 function list (req, res) {
-  var offset = ~~req.query.offset || 0
-    , limit = ~~req.query.limit || 25
-
-  res.json(DATA.slice(offset*limit, offset*limit + limit))
+    var offset = ~~req.query.offset || 0;
+    var limit = ~~req.query.limit || 25;
+    Car.find().skip(offset*limit).limit(limit).lean().exec(function (err, users) {
+        return res.end(JSON.stringify(users));
+    });
 }
 
 function create (req, res) {
-  var newCar = req.body
-  newCar.id = getLastId() + 1
-  DATA.push(newCar)
-  saveDB(function(err) {
-    if (err) 
-      res.json(formatRespData(0, err))
-    else
-      res.json(formatRespData({id: newCar.id}))
-  })
+    var newCarData = req.body;
+    var newCar = Car();
+    newCar = _(newCar).extend(newCarData);
+    newCar.save(function (err, newCar) {
+        if (err) {
+            res.json(formatRespData(0, err));
+        } else {
+            res.json(formatRespData({id: newCar.id}));
+        }
+    });
 }
 
 function read (req, res) {
-  var id = ~~req.params.id
-  var car = _(DATA).find(function(car) { return car.id === id })
-
-  if (!car)
-    res.json(formatRespData(0, "Can't find car with id: " + id))
-  else
-    res.json(formatRespData(car))
+    var id = req.params.id;
+    Car.findOne({ _id: id }).lean().exec(function (err, car) {
+        if (!car)
+            res.json(formatRespData(0, "Can't find car with id: " + id));
+        else
+            res.json(formatRespData(car));
+    });
 }
 
 function update (req, res) {
-  var id = ~~req.params.id
-  var car = _(DATA).find(function(car) { return car.id === id })
-
-  var newCarData = req.body
-  car = _(car).extend(newCarData)
-
-  saveDB(function(err) {
-    if (err) 
-      res.json(formatRespData(0, err))
-    else
-      res.json(formatRespData({}))
-  })
+    var id = req.params.id;
+    Car.findOne({ _id: id }).exec(function (err, car) {
+        var newCarData = req.body;
+        car = _(car).extend(newCarData);
+        car.save(function (err, car) {
+            if (err) {
+                res.json(formatRespData(0, err));
+            } else {
+                res.json(formatRespData({}));
+            }
+        });
+    });
 }
 
 function del (req, res) {
-  var id = ~~req.params.id
-  var car = _(DATA).find(function(car) { return car.id === id })
-
-  var idx = DATA.indexOf(car)
-  if (idx < 0) return res.json(formatRespData(0, "Could not find car with id: " + id))
-
-  DATA.splice(idx, 1)
-
-  saveDB(function(err) {
-    if (err) 
-      res.json(formatRespData(0, err))
-    else
-      res.json(formatRespData({}))
-  })
+    var id = req.params.id;
+    var car = Car.findOne({ _id: id });
+    Car.remove({ _id: id }, function (err) {
+        if (err) {
+            res.json(formatRespData(0, err));
+        } else {
+            res.json(formatRespData({}));
+        };
+    });
 }
 
 function total (req, res) {
-  total = DATA.length ? DATA.length : 0
-  res.json({total: total})
+    Car.find().count().exec(function (err, total) {
+        res.json({total: total});
+    });
 }
-
 
 
 /*******************
  * Private Methods
  *******************/
 
-function getLastId () {
-  return DATA.length;
-}
-
 function formatRespData (code, content) {
-  if (typeof code === 'object') {
-    content = code,
-    code = 1 //0 failure, 1 = success
-  }
+    if (typeof code === 'object') {
+        content = code,
+        code = 1 //0 failure, 1 = success
+    }
 
-  return {
-    code: code,
-    content: content
-  }
-}
-
-function saveDB (callback) {
-  fs.writeJson(DATA_FILE, DATA, callback)
+    return {
+        code: code,
+        content: content
+    }
 }
 

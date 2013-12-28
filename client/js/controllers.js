@@ -34,12 +34,12 @@ function ListCtrl ($scope, $http, CarsService) {
   $scope.select = function(i) {
     $scope.index = index
     index = i
-    $scope.selectedId = $scope.cars[index].id
+    $scope.selectedId = $scope.cars[index]._id
   }
 
   $scope.delete = function() {
     if (index >= 0) {
-      CarsService.delete({id: $scope.cars[index].id})
+      CarsService.delete({_id: $scope.cars[index]._id})
       $scope.cars.splice(index, 1)
     }
   }
@@ -52,16 +52,15 @@ function ListCtrl ($scope, $http, CarsService) {
 }
 
 function EditCtrl ($scope, $location, $routeParams, CarsService) {
-  var id = $routeParams.id
-  CarsService.get({id: id}, function(resp) {
+  var _id = $routeParams._id;
+  CarsService.get({_id: _id}, function(resp) {
     $scope.car = resp.content  
   })
-  //$scope.car = CarsService.get({id: id})
   $scope.action = "Update"
 
 
   $scope.save = function() {
-    CarsService.update({id: id}, $scope.car, function() {
+    CarsService.update({_id: _id}, $scope.car, function() {
       $location.path('/')
     })
   }
