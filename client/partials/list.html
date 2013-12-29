@@ -11,7 +11,7 @@
   </div>
 </div>
 
-<p>Sorted by: {{sortColumn}}  Sort direction: {{sortReverse ? "reversed" : "not reversed"}}</p>
+<p>Sorted by: {{sortColumn}}<br/>Sort direction: {{sortReverse ? "descending" : "ascending" }}</p>
 <div class="input-prepend">
     <span class="add-on"><i class="icon-search"></i></span>
     <input class="span2" id="inputIcon" type="text" placeholder="Search..." ng-model="search" ng-change="onChangeSearch()">
@@ -34,7 +34,7 @@
     <td>{{car.price | currency}}</td> <!-- currency filter -->
     <td><img style="height: 60px; float: right;" ng-src="{{car.imgData}}"</img></td>
     <td>
-        <button ng-click="delete($index)">Remove</button>
+        <button ng-click="delete($index)" class="btn btn-danger">Remove</button>
     </td>
   </tr>
 </table>
