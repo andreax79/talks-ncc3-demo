@@ -19,18 +19,23 @@ function ListCtrl ($scope, $http, CarsService) {
   $scope.pageCount = 0;
   $scope.sortColumn = "title";
   $scope.sortReverse = false;
+  $scope.search = "";
 
   $scope.cars = CarsService.query();
 
   $scope.index = index; //currently selected element
   $scope.selectedId = -1; //actual id of selected car
 
-  $http.get('/api/cars/total').success(function(body) {
-    $scope.total = body.total;
-    $scope.pageCount = Math.floor($scope.total / $scope.limit);
-    if ($scope.total % $scope.limit !== 0)
-      $scope.pageCount += 1;
-  })
+  function loadPageNumber() {
+    $http.get('/api/cars/total',{params: {search: $scope.search}}).success(function(body) {
+        $scope.total = body.total;
+        $scope.pageCount = Math.floor($scope.total / $scope.limit);
+        if ($scope.total % $scope.limit !== 0)
+        $scope.pageCount += 1;
+    });
+  }
+
+  loadPageNumber();
 
   $scope.select = function(i) {
     $scope.index = index;
@@ -45,6 +50,11 @@ function ListCtrl ($scope, $http, CarsService) {
     }
   }
 
+  $scope.onChangeSearch = function() {
+    loadPageNumber();
+    $scope.loadPage($scope.offset + 1); // reload
+  }
+
   $scope.sortBy = function(sortBy) {
     $scope.sortReverse = $scope.sortColumn == sortBy ? !$scope.sortReverse : false;
     $scope.sortColumn = sortBy;
@@ -53,8 +63,9 @@ function ListCtrl ($scope, $http, CarsService) {
 
   $scope.loadPage = function (pg) {
     $scope.offset = pg - 1;
-    $scope.cars = CarsService.query({offset: $scope.offset, limit: $scope.limit, orderBy: $scope.sortColumn, reverse: $scope.sortReverse});
+    $scope.cars = CarsService.query({offset: $scope.offset, limit: $scope.limit, orderBy: $scope.sortColumn, reverse: $scope.sortReverse, search: $scope.search});
   }
+
 }
 
 

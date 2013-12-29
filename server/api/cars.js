@@ -20,10 +20,18 @@ function list (req, res) {
     var reverse = req.query.reverse == "true";
     if (reverse)
         orderBy = "-" + orderBy;
+    var search = req.query.search || "";
+    var searchNumber = Number(search) || 0;
+    var re = new RegExp(search, 'i');
     Car.find().skip(offset*limit)
         .limit(limit)
         .lean()
         .sort(orderBy)
+        .or([{ 'title': { $regex: re }},
+             { 'year':  searchNumber },
+             { 'mileage': searchNumber },
+             { 'price': searchNumber } ])
+//      .or([{ 'title': { $regex: re }}, { 'year':  search }, { 'mileage': search }, { 'price': search } ])
         .exec(function (err, users) {
             return res.end(JSON.stringify(users));
         });
@@ -80,9 +88,18 @@ function del (req, res) {
 }
 
 function total (req, res) {
-    Car.find().count().exec(function (err, total) {
-        res.json({total: total});
-    });
+    var search = req.query.search || "";
+    var re = new RegExp(search, 'i');
+    var searchNumber = Number(search) || 0;
+    Car.find()
+        .or([{ 'title': { $regex: re }},
+             { 'year':  searchNumber },
+             { 'mileage': searchNumber },
+             { 'price': searchNumber } ])
+        .count()
+        .exec(function (err, total) {
+            res.json({total: total});
+        });
 }
 
 

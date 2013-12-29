@@ -12,6 +12,10 @@
 </div>
 
 <p>Sorted by: {{sortColumn}}  Sort direction: {{sortReverse ? "reversed" : "not reversed"}}</p>
+<div class="input-prepend">
+    <span class="add-on"><i class="icon-search"></i></span>
+    <input class="span2" id="inputIcon" type="text" placeholder="Search..." ng-model="search" ng-change="onChangeSearch()">
+</div>
 
 <table class="table table-striped table-hover table-bordered">
   <thead>
