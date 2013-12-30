@@ -14,26 +14,3 @@ CarApp.factory('CarsService', function($resource) {
   return $resource('/api/cars/:_id', {_id: '@_id'}, {update: {method: 'PUT'}})
 })
 
-CarApp.directive('formfield', function() {
-  return {
-    restrict: 'E', //could be E, A, C (class), M (comment)
-    scope: {
-      prop: '@',
-      data: '=ngModel'
-    },
-    templateUrl: '/partials/formfield.html'
-  }
-})
-
-CarApp.directive('formfield2', function() {
-  return {
-    restrict: 'E', //could be E, A, C (class), M (comment)
-    scope: {
-      prop: '@'
-    },
-    transclude: true,
-    templateUrl: 'formfield2.html',
-    replace: true
-  }
-})
-

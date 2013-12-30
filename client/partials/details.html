@@ -1,6 +1,6 @@
 <h2>{{action}} Ferrari</h2>
 
-<script type="text/ng-template" id="formfield2.html">
+<script type="text/ng-template" id="details.html">
   <div id="template">
   <div class="control-group">
     <label class="control-label" for="{{prop | lowercase}}">{{prop}}</label>
@@ -11,17 +11,53 @@
 </script>
 
 <form name="carform" class="form-horizontal">
-  <formfield prop="Title" ng-model="car.title"></formfield>
-  <formfield prop="Mileage" ng-model="car.mileage"></formfield>
-  <formfield prop="Price" ng-model="car.price"></formfield>
-  <formfield2 prop="Year" ng-model="car.year">
-    <input type="text" ng-model="car.year">
-  </formfield2>
+    <fieldset>
 
-  <div class="form-actions">
-    <button ng-click="save()" class="btn btn-primary">
-      {{action}}
-    </button>
-    <a href="/" class="btn">Cancel</a>
-  </div>
+    <!-- Form Name -->
+    <legend>{{action}} Ferrari</legend>
+
+    <!-- Text input-->
+    <div class="control-group">
+    <label class="control-label" for="title">Title</label>
+    <div class="controls">
+        <input id="title" ng-model="car.title" name="title" type="text" placeholder="Title" class="input-xlarge" required="required" />
+    </div>
+    </div>
+
+    <!-- Text input-->
+    <div class="control-group">
+    <label class="control-label" for="mileage">Mileage</label>
+    <div class="controls">
+        <input id="mileage" ng-model="car.mileage" name="mileage" type="number" placeholder="Mileage" class="input-xlarge" required="required" />
+    </div>
+    </div>
+
+    <!-- Text input-->
+    <div class="control-group">
+    <label class="control-label" for="price">Price</label>
+    <div class="controls">
+        <input id="price" ng-model="car.price" name="price" type="number" placeholder="Price" class="input-xlarge" required="required" />
+    </div>
+    </div>
+
+    <!-- Text input-->
+    <div class="control-group">
+    <label class="control-label" for="year">Year</label>
+    <div class="controls">
+        <input id="year" ng-model="car.year" name="year" type="number" placeholder="Year" class="input-xlarge" required="required" />
+    </div>
+    </div>
+
+    <!-- Button (Double) -->
+    <div class="control-group">
+    <label class="control-label"></label>
+    <div class="controls">
+        <button ng-click="save()" class="btn btn-primary" ng-disabled='!carform.$valid'>
+        {{action}}
+        </button>
+        <a href="/" class="btn btn-default">Cancel</a>
+    </div>
+    </div>
+
+    </fieldset>
 </form>
