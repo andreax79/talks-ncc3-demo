@@ -22,15 +22,21 @@ app.configure(function() {
   app.use(express.bodyParser()) ;
   app.use(app.router) ;
   app.use(express.static(clientDir));
-})
+});
 
 app.configure('development', function(){
   app.use(express.errorHandler());
-})
+});
 
 app.get('/', function(req, res) {
   res.sendfile(path.join(clientDir, 'index.html'))
-})
+});
+app.get('/new', function(req, res) {
+  res.sendfile(path.join(clientDir, 'index.html'))
+});
+app.get('/edit/:id', function(req, res) {
+  res.sendfile(path.join(clientDir, 'index.html'))
+});
 
 app.get('/api/cars', cars.list);
 app.get('/api/cars/total', cars.total); //placement matters
