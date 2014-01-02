@@ -69,11 +69,14 @@ function ListCtrl ($scope, $http, CarsService) {
 }
 
 
-function EditCtrl ($scope, $location, $routeParams, CarsService) {
+function EditCtrl ($scope, $upload, $location, $routeParams, CarsService) {
   var _id = $routeParams._id;
+
   CarsService.get({_id: _id}, function(resp) {
     $scope.car = resp.content;
+    $scope.car.imgUploadId = null;
   })
+
   $scope.action = "Update";
 
   $scope.save = function() {
@@ -81,5 +84,37 @@ function EditCtrl ($scope, $location, $routeParams, CarsService) {
       $location.path('/');
     })
   }
+
+  $scope.onFileSelect = function($files) {
+    //$files: an array of files selected, each file has name, size, and type.
+    for (var i = 0; i < $files.length; i++) {
+      var file = $files[i];
+      //console.log(file);
+      //console.log($upload);
+      $scope.upload = $upload.upload({
+        url: '/api/cars/upload', //upload.php script, node.js route, or servlet url
+        // method: POST or PUT,
+        // headers: {'headerKey': 'headerValue'}, withCredential: true,
+        //data: {myObj: $scope.myModelObj},
+        headers: {},
+        file: file,
+        // file: $files, //upload multiple files, this feature only works in HTML5 FromData browsers
+        /* set file formData name for 'Content-Desposition' header. Default: 'file' */
+        //fileFormDataName: myFile,
+        /* customize how data is added to formData. See #40#issuecomment-28612000 for example */
+        //formDataAppender: function(formData, key, val){} 
+      }).progress(function(evt) {
+        console.log('percent: ' + parseInt(100.0 * evt.loaded / evt.total));
+      }).success(function(data, status, headers, config) {
+        // file is uploaded successfully
+        console.log("success");
+        console.log(data);
+        $scope.car.imgUploadId = data.imgUploadId;
+      });
+      //.error(...)
+      //.then(success, error, progress); 
+    }
+  };
+
 }
 

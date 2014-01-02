@@ -3,6 +3,7 @@ if (!process.env.NODE_ENV)
 
 var express = require('express') // web framework
   , http = require('http')
+  , fs = require('fs')
   , path = require('path')
   , reload = require('reload') // reload browser when codechanges
   , colors = require('colors') // get colors in console
@@ -10,6 +11,7 @@ var express = require('express') // web framework
   , cars = require('./server/api/cars');
 
 var app = express();
+app.use(express.bodyParser());
 
 var clientDir = path.join(__dirname, 'client');
 
@@ -31,10 +33,9 @@ app.get('/', function(req, res) {
 })
 
 app.get('/api/cars', cars.list);
-
 app.get('/api/cars/total', cars.total); //placement matters
-
 app.get('/api/cars/:id', cars.read); //sometimes called 'show'
+app.post('/api/cars/upload', cars.upload);
 app.post('/api/cars', cars.create);
 app.put('/api/cars/:id', cars.update);
 app.del('/api/cars/:id', cars.del);

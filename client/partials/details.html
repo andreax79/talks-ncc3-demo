@@ -13,10 +13,8 @@
 <form name="carform" class="form-horizontal">
     <fieldset>
 
-    <!-- Form Name -->
     <legend>{{action}} Ferrari</legend>
 
-    <!-- Text input-->
     <div class="control-group">
     <label class="control-label" for="title">Title</label>
     <div class="controls">
@@ -24,7 +22,6 @@
     </div>
     </div>
 
-    <!-- Text input-->
     <div class="control-group">
     <label class="control-label" for="mileage">Mileage</label>
     <div class="controls">
@@ -32,7 +29,6 @@
     </div>
     </div>
 
-    <!-- Text input-->
     <div class="control-group">
     <label class="control-label" for="price">Price</label>
     <div class="controls">
@@ -40,7 +36,6 @@
     </div>
     </div>
 
-    <!-- Text input-->
     <div class="control-group">
     <label class="control-label" for="year">Year</label>
     <div class="controls">
@@ -48,7 +43,16 @@
     </div>
     </div>
 
-    <!-- Button (Double) -->
+    <div class="control-group">
+    <label class="control-label" for="photo">Photo</label>
+    <div class="controls">
+        <input type="file" ng-file-select="onFileSelect($files)" />
+        <div ng-file-drop="onFileSelect($files)" ng-file-drag-over-class="optional-css-class" ng-show="dropSupported">drop files here</div>
+        <div ng-file-drop-available="dropSupported=true"  ng-show="!dropSupported">HTML5 Drop File is not supported!</div>
+        <button ng-click="upload.abort()" class="btn btn-default btn-xs">Cancel Upload</button>
+    </div>
+    </div>
+
     <div class="control-group">
     <label class="control-label"></label>
     <div class="controls">

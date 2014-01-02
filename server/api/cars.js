@@ -1,4 +1,8 @@
 var _ = require('underscore'), // helper
+    os = require('os'),
+    fs = require('fs'),
+    path = require('path'),
+    gm = require('gm'), // GraphicsMagick for node.js
     mongoose = require('mongoose'),
     Car = mongoose.model('Car'); // model
 
@@ -8,6 +12,7 @@ module.exports.read = read;
 module.exports.update = update;
 module.exports.del = del;
 module.exports.total = total;
+module.exports.upload = upload;
 
 /**********************
  * Public Interface
@@ -60,18 +65,47 @@ function read (req, res) {
     });
 }
 
+function sanitize(path) {
+    return path.replace(/\.\.\//g,'');
+}
+
 function update (req, res) {
     var id = req.params.id;
     Car.findOne({ _id: id }).exec(function (err, car) {
+ 
+        function saveCar() {
+            car = _(car).extend(newCarData);
+            car.save(function (err, car) {
+                if (err) {
+                    res.json(formatRespData(0, err));
+                } else {
+                    res.json(formatRespData({}));
+                }
+            });
+        }
+
         var newCarData = req.body;
-        car = _(car).extend(newCarData);
-        car.save(function (err, car) {
-            if (err) {
-                res.json(formatRespData(0, err));
+        delete newCarData.imgData;
+        if (newCarData.imgUploadId == null) {
+            saveCar();
+        } else {
+            var imgPath = path.join("/tmp", sanitize(newCarData.imgUploadId));
+            if (!fs.existsSync(imgPath)) {
+                saveCar();
             } else {
-                res.json(formatRespData({}));
+                // Resize the image and encode in base64
+                var imageMagick = gm.subClass({ imageMagick: true });
+                imageMagick(imgPath).resize(140).write(imgPath, function() {
+                    fs.readFile(imgPath, function(err, data) {
+                        newCarData.imgData = "data:image/jpg;base64," + new Buffer(data).toString('base64');
+                        saveCar();
+                        // Delete the uploaded file
+                        fs.unlink(imgPath);
+                    });
+                });
             }
-        });
+        }
+
     });
 }
 
@@ -102,6 +136,11 @@ function total (req, res) {
         });
 }
 
+function upload (req, res)  {
+    //console.log(req.files);
+    var name = path.basename();
+    res.json({imgUploadId: path.basename(req.files.file.path)});
+};
 
 /*******************
  * Private Methods

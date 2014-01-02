@@ -19,10 +19,11 @@
     "underscore": "~1.4.4",
     "colors": "~0.6.0-1",
     "reload": "0.1.0",
-    "mongoose": "3.8.3"
+    "mongoose": "3.8.3",
+    "gm": "1.9.0"
   },
   "devDependencies": {
     "superagent": "~0.12.4",
-    "reload": "0.1.0",
+    "reload": "0.1.0"
   }
 }
