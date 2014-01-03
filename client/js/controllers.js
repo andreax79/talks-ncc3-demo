@@ -173,9 +173,9 @@ function CreateCtrl($injector, $scope, $rootScope, $upload, $location, $routePar
 
   /** Init function */
   this.initialize = this.initialize || function () {
-      _id = null;
-      // Set the title
-      $scope.action = 'Add';
+    _id = null;
+    // Set the title
+    $scope.action = 'Add';
   }
 
   // Inherits from the EditCtrl
@@ -190,4 +190,28 @@ function CreateCtrl($injector, $scope, $rootScope, $upload, $location, $routePar
   
 }
 
+function FieldsCtrl($scope, CarsService) {
+
+  /** Add a new field */
+  $scope.addItem = function() {
+      if ($scope.$parent.car.fields == undefined) {
+        $scope.$parent.car.fields = [];
+      }
+    $scope.$parent.car.fields.push({
+        name: '',
+        value: ''
+    });
+  }
+
+  /** Remove a field */
+  $scope.delete = function(index) {
+    $scope.$parent.car.fields.splice(index, 1);
+  }
+
+  /** Init function */
+  this.initialize = this.initialize || function () {
+  }
+
+  this.initialize();
+}
 

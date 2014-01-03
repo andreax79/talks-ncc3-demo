@@ -53,6 +53,27 @@
     </div>
     </div>
 
+    <div class="nested" ng-controller="FieldsCtrl">
+        <label class="control-label" >Additional fields</label>
+        <table class="table">
+        <tr>
+            <th>Name</th>
+            <th>Value</th>
+            <th></th>
+        </tr>
+        <tr ng:repeat="item in car.fields">
+            <td><input type="text" ng-model="item.name" class="input-xlarge"></td>
+            <td><input type="text" ng-model="item.value" ng:required class="input-xlarge"></td>
+            <td>
+                <button ng-click="delete($index)" class="btn btn-default btn-danger">Delete</button>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="3"><a href ng-click="addItem()"  class="btn btn-default">Add field</a></td>
+        </tr>
+        </table>
+    </div>
+
     <div class="control-group">
     <label class="control-label"></label>
     <div class="controls">

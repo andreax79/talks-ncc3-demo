@@ -7,6 +7,7 @@ var carSchema = mongoose.Schema({
     price: { type: Number, index: true },
     title: { type: String, index: true },
     year: { type: Number, index: true },
+    fields: [ { name: String, value: String }],
     imgData: String
 });
 
