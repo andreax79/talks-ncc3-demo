@@ -1,48 +1,46 @@
 
-
-function CreateCtrl ($scope, $location, CarsService) {
-  $scope.action = 'Add'
-  $scope.save = function() {
-    CarsService.save($scope.car, function() {
-      $location.path('/')
-    })
-  }  
-}
-
-function ListCtrl ($scope, $http, CarsService) {
-  var index = -1;
+function ListCtrl($scope, $rootScope, $location, $http, CarsService) {
+  var index = -1; // selected item index
 
   //for pagination and searching
   $scope.limit = 25;
-  $scope.offset = 0; //this is the same as: (current page - 1)
   $scope.total = 0;
   $scope.pageCount = 0;
-  $scope.sortColumn = "title";
-  $scope.sortReverse = false;
-  $scope.search = "";
+  $scope.page = Number(($location.search()).page) || 1;
+  $scope.sortColumn = ($location.search()).sortBy || "title";
+  $scope.sortReverse = ($location.search()).reverse == "1";
+  $scope.search = ($location.search()).search || "";
 
-  $scope.cars = CarsService.query();
+  $scope.cars = null;
 
   $scope.index = index; //currently selected element
   $scope.selectedId = -1; //actual id of selected car
 
-  function loadPageNumber() {
+  /** Reload the current page */
+  function reload() {
+    // Load the number of pages
     $http.get('/api/cars/total',{params: {search: $scope.search}}).success(function(body) {
         $scope.total = body.total;
         $scope.pageCount = Math.floor($scope.total / $scope.limit);
         if ($scope.total % $scope.limit !== 0)
-        $scope.pageCount += 1;
+            $scope.pageCount += 1;
+        if ($scope.page > $scope.pageCount)
+            $scope.page = $scope.pageCount;
+        if ($scope.page < 1)
+            $scope.page = 1;
+        // Load the current page
+        $scope.loadPage($scope.page);
     });
   }
 
-  loadPageNumber();
-
+  /** Select an item */
   $scope.select = function(i) {
     $scope.index = index;
     index = i;
     $scope.selectedId = $scope.cars[index]._id;
   }
 
+  /** Delete an item */
   $scope.delete = function(index) {
     if (index >= 0) {
       CarsService.delete({_id: $scope.cars[index]._id});
@@ -50,41 +48,74 @@ function ListCtrl ($scope, $http, CarsService) {
     }
   }
 
+  /** Triggered when the search string is changed */
   $scope.onChangeSearch = function() {
-    loadPageNumber();
-    $scope.loadPage($scope.offset + 1); // reload
+    reload();
   }
 
+  /** Change sort direction */
   $scope.sortBy = function(sortBy) {
     $scope.sortReverse = $scope.sortColumn == sortBy ? !$scope.sortReverse : false;
     $scope.sortColumn = sortBy;
-    $scope.loadPage($scope.offset + 1); // reload
+    reload();
   }
 
-  $scope.loadPage = function (pg) {
-    $scope.offset = pg - 1;
-    $scope.cars = CarsService.query({offset: $scope.offset, limit: $scope.limit, orderBy: $scope.sortColumn, reverse: $scope.sortReverse, search: $scope.search});
+  /** Load a page */
+  $scope.loadPage = function(page) {
+    $scope.page = page;
+    $scope.cars = CarsService.query({offset: $scope.page - 1, limit: $scope.limit, orderBy: $scope.sortColumn, reverse: $scope.sortReverse, search: $scope.search});
+    // Set the page parameters
+    $location.search({search: $scope.search,
+                      reverse: $scope.sortReverse ? "1" : "0",
+                      sortBy: $scope.sortColumn,
+                      page: $scope.page});
+    if ($rootScope.navigationHistory == undefined)
+        $rootScope.navigationHistory = [];
+    $rootScope.navigationHistory.push($location.$$url);
+    $rootScope.navigationHistory = $rootScope.navigationHistory.slice(-50);
   }
+
+  $scope.$on('$routeChangeSuccess', function() {
+    if ($rootScope.navigationHistory == undefined)
+        $rootScope.navigationHistory = [];
+    $rootScope.navigationHistory.push($location.$$url);
+    $rootScope.navigationHistory = $rootScope.navigationHistory.slice(-50);
+  });
+
+  reload();
 
 }
 
 
-function EditCtrl ($scope, $upload, $location, $routeParams, CarsService) {
-  var _id = $routeParams._id;
+function EditCtrl($scope, $rootScope, $upload, $location, $routeParams, CarsService) {
+  var _id;
 
-  CarsService.get({_id: _id}, function(resp) {
-    $scope.car = resp.content;
-    $scope.car.imgUploadId = null;
-  })
+  function back() {
+    if ($rootScope.navigationHistory == undefined)
+        $rootScope.navigationHistory = [];
+    var prevUrl = $rootScope.navigationHistory.length > 1 ? $rootScope.navigationHistory.splice(-2)[0] : "/";
+    $location.url(prevUrl);
+  };
 
-  $scope.action = "Update";
-
+  /** Save (update or create) */
   $scope.save = function() {
-    CarsService.update({_id: _id}, $scope.car, function() {
-      $location.path('/');
-    })
+    if (_id != null) { // update existing item
+        CarsService.update({_id: _id}, $scope.car, function() {
+            back();
+        });
+    } else { // create new item
+        CarsService.save($scope.car, function() {
+            back();
+        });
+    }
   }
+ 
+  /** Cancel */
+  $scope.cancel = function () {
+    back();
+  };
 
+  /** File upload */
   $scope.onFileSelect = function($files) {
     //$files: an array of files selected, each file has name, size, and type.
     for (var i = 0; i < $files.length; i++) {
@@ -92,8 +123,7 @@ function EditCtrl ($scope, $upload, $location, $routeParams, CarsService) {
       //console.log(file);
       //console.log($upload);
       $scope.upload = $upload.upload({
-        url: '/api/cars/upload', //upload.php script, node.js route, or servlet url
-        // method: POST or PUT,
+        url: '/api/cars/upload',
         // headers: {'headerKey': 'headerValue'}, withCredential: true,
         //data: {myObj: $scope.myModelObj},
         headers: {},
@@ -111,10 +141,51 @@ function EditCtrl ($scope, $upload, $location, $routeParams, CarsService) {
         console.log(data);
         $scope.car.imgUploadId = data.imgUploadId;
       });
-      //.error(...)
-      //.then(success, error, progress); 
     }
   };
 
+  /** Init function */
+  this.initialize = this.initialize || function () {
+    // Load the item
+    _id = $routeParams._id;
+    CarsService.get({_id: _id}, function(resp) {
+        $scope.car = resp.content;
+        $scope.car.imgUploadId = null;
+    });
+    // Set the title
+    $scope.action = "Update";
+    // Trigger
+    $scope.$on('$routeChangeSuccess', function() {
+        if ($rootScope.navigationHistory == undefined)
+            $rootScope.navigationHistory = [];
+        $rootScope.navigationHistory.push($location.$$url);
+        $rootScope.navigationHistory = $rootScope.navigationHistory.slice(-50);
+    });
+  }
+
+  this.initialize();
+
 }
+
+function CreateCtrl($injector, $scope, $rootScope, $upload, $location, $routeParams, CarsService) {
+
+  /** Init function */
+  this.initialize = this.initialize || function () {
+      _id = null;
+      // Set the title
+      $scope.action = 'Add';
+  }
+
+  // Inherits from the EditCtrl
+  $injector.invoke(EditCtrl, this, {
+    $scope: $scope,
+    $rootScope: $rootScope,
+    $upload: $upload,
+    $location: $location,
+    $routeParams: $routeParams,
+    CarsService: CarsService
+  });
+  
+}
+
 

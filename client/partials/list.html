@@ -11,6 +11,14 @@
     <input class="span2" id="inputIcon" type="text" placeholder="Search..." ng-model="search" ng-change="onChangeSearch()">
 </div>
 
+<div>
+  <ul class="pagination center">
+      <li ng-repeat="n in [1,pageCount] | range" class="{{(n == page) ? 'active' : ''}}">
+      <a href="#" ng-click="loadPage(n)">{{n}}</a>
+    </li>
+  </ul>
+</div>
+
 <table class="table table-striped table-hover table-bordered">
   <thead>
       <th><a ng-click="sortBy('title')">Title</a></th>
@@ -21,7 +29,7 @@
     <th>Actions</th>
   </thead>
 
-  <tr ng-repeat="car in cars" ng-click="select($index)" ng-class="{'info': $index == index}">
+  <tr ng-repeat="car in cars" ng-click="select($index)" ng-class="{'success': $index == index}">
       <td>{{car.title}}</td>
     <td>{{car.mileage | mileage}}</td>
     <td>{{car.year}}</td>
@@ -35,7 +43,7 @@
 
 <div>
   <ul class="pagination center">
-      <li ng-repeat="n in [1,pageCount] | range" class="{{(n == offset + 1) ? 'active' : ''}}">
+      <li ng-repeat="n in [1,pageCount] | range" class="{{(n == page) ? 'active' : ''}}">
       <a href="#" ng-click="loadPage(n)">{{n}}</a>
     </li>
   </ul>

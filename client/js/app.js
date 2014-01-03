@@ -3,7 +3,7 @@ var CarApp = angular.module('CarApp', ['ngRoute', 'ngResource', 'angularFileUplo
 
 CarApp.config(function($routeProvider, $locationProvider) {
   $routeProvider
-    .when('/', {controller: ListCtrl, templateUrl: '/partials/list.html'}) 
+    .when('/', {controller: ListCtrl, templateUrl: '/partials/list.html', reloadOnSearch: false}) 
     .when('/edit/:_id', {controller: EditCtrl, templateUrl: '/partials/details.html'})
     .when('/new', {controller: CreateCtrl, templateUrl: '/partials/details.html'})
     .otherwise({redirectTo: '/'});
