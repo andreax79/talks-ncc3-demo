@@ -62,6 +62,8 @@ function ListCtrl($scope, $rootScope, $location, $http, CarsService) {
 
   /** Load a page */
   $scope.loadPage = function(page) {
+    index = -1;
+    $scope.index = index;
     $scope.page = page;
     $scope.cars = CarsService.query({offset: $scope.page - 1, limit: $scope.limit, orderBy: $scope.sortColumn, reverse: $scope.sortReverse, search: $scope.search});
     // Set the page parameters
