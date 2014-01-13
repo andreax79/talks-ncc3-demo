@@ -77,7 +77,7 @@
     <div class="control-group">
     <label class="control-label"></label>
     <div class="controls">
-        <button ng-click="save()" class="btn btn-primary" ng-disabled='false && !carform.$valid'>
+        <button ng-click="save()" class="btn btn-primary" ng-disabled='!carform.$valid'>
         {{action}}
         </button>
         <a ng-click="cancel()" class="btn btn-default">Cancel</a>
