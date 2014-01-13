@@ -8,7 +8,7 @@ var express = require('express') // web framework
   , reload = require('reload') // reload browser when codechanges
   , colors = require('colors') // get colors in console
   , db = require('./server/model/db')
-  , cars = require('./server/api/cars');
+  , api = require('./server/api/cars');
 
 var app = express();
 app.use(express.bodyParser());
@@ -38,13 +38,7 @@ app.get('/edit/:id', function(req, res) {
   res.sendfile(path.join(clientDir, 'index.html'))
 });
 
-app.get('/api/cars', cars.list);
-app.get('/api/cars/total', cars.total); //placement matters
-app.get('/api/cars/:id', cars.read); //sometimes called 'show'
-app.post('/api/cars/upload', cars.upload);
-app.post('/api/cars', cars.create);
-app.put('/api/cars/:id', cars.update);
-app.del('/api/cars/:id', cars.del);
+var car = new api.Rest(app, '/api/cars', 'Car');
 
 var server = http.createServer(app);
 

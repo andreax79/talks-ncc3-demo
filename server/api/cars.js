@@ -3,32 +3,46 @@ var _ = require('underscore'), // helper
     fs = require('fs'),
     path = require('path'),
     gm = require('gm'), // GraphicsMagick for node.js
-    mongoose = require('mongoose'),
-    Car = mongoose.model('Car'); // model
+    mongoose = require('mongoose');
 
-module.exports.list = list;
-module.exports.create = create;
-module.exports.read = read;
-module.exports.update = update;
-module.exports.del = del;
-module.exports.total = total;
 module.exports.upload = upload;
 
 /**********************
  * Public Interface
  **********************/
 
-function list (req, res) {
+var Rest = function (app, path, schema) {
+    this.limit = 25;
+    this.orderBy = "title";
+    if (typeof schema == 'string')
+        this.schema = mongoose.model(schema);
+    else    
+        this.schema = schema;
+
+    app.post(path + '/upload', upload);
+    
+    var instance = this;
+    app.get(path + '', function(req,res) { return instance.list(req,res); });
+    app.get(path + '/total', function(req,res) { return instance.total(req,res); }); //placement matters
+    app.get(path + '/:id',  function(req,res) { return instance.read(req,res); }); //sometimes called 'show'
+    app.post(path, function(req,res) { return instance.create(req,res); });
+    app.put(path + '/:id', function(req,res) { return instance.update(req,res); });
+    app.del(path + '/:id', function(req,res) { return instance.del(req,res); });
+}; 
+
+module.exports.Rest = Rest;
+
+Rest.prototype.list = function(req, res) {
     var offset = ~~req.query.offset || 0;
-    var limit = ~~req.query.limit || 25;
-    var orderBy = req.query.orderBy || "title";
+    var limit = ~~req.query.limit || this.limit;
+    var orderBy = req.query.orderBy || this.orderBy;
     var reverse = req.query.reverse == "true";
     if (reverse)
         orderBy = "-" + orderBy;
     var search = req.query.search || "";
     var searchNumber = Number(search) || 0;
     var re = new RegExp(search, 'i');
-    Car.find().skip(offset*limit)
+    this.schema.find().skip(offset*limit)
         .limit(limit)
         .lean()
         .sort(orderBy)
@@ -42,40 +56,62 @@ function list (req, res) {
         });
 }
 
-function create (req, res) {
-    var newCarData = req.body;
-    var newCar = Car();
-    newCar = _(newCar).extend(newCarData);
-    newCar.save(function (err, newCar) {
+Rest.prototype.create = function(req, res) {
+    var newItemData = req.body;
+    var newItem = this.schema();
+    newItem = _(newItem).extend(newItemData);
+    newItem.save(function onSave(err, newItem) {
         if (err) {
             res.json(formatRespData(0, err));
         } else {
-            res.json(formatRespData({id: newCar.id}));
+            res.json(formatRespData({id: newItem.id}));
         }
     });
 }
 
-function read (req, res) {
+Rest.prototype.read = function(req, res) {
     var id = req.params.id;
-    Car.findOne({ _id: id }).lean().exec(function (err, car) {
-        if (!car)
-            res.json(formatRespData(0, "Can't find car with id: " + id));
+    this.schema.findOne({ _id: id }).lean().exec(function onFindOne(err, item) {
+        if (!item)
+            res.json(formatRespData(0, "Can't find item with id: " + id));
         else
-            res.json(formatRespData(car));
+            res.json(formatRespData(item));
     });
 }
 
-function sanitize(path) {
-    return path.replace(/\.\.\//g,'');
+Rest.prototype.beforeUpdate = function(req, res, item, next) {
+    delete req.body.imgData;
+    if (req.body.imgUploadId == null) {
+        next();
+    } else {
+        var imgPath = path.join("/tmp", sanitize(req.body.imgUploadId));
+        if (!fs.existsSync(imgPath)) {
+            next();
+        } else {
+            console.log(req.body.imgUploadId);
+            // Resize the image and encode in base64
+            var imageMagick = gm.subClass({ imageMagick: true });
+            imageMagick(imgPath).resize(140).write(imgPath, function() {
+                fs.readFile(imgPath, function(err, data) {
+                    req.body.imgData = "data:image/jpg;base64," + new Buffer(data).toString('base64');
+            console.log(req.body.imgData)
+                    next(req.body);
+                    // Delete the uploaded file
+                    fs.unlink(imgPath);
+                });
+            });
+        }
+    }
 }
 
-function update (req, res) {
+Rest.prototype.update = function(req, res) {
     var id = req.params.id;
-    Car.findOne({ _id: id }).exec(function (err, car) {
- 
-        function saveCar() {
-            car = _(car).extend(newCarData);
-            car.save(function (err, car) {
+    var instance = this;
+    this.schema.findOne({ _id: id }).exec(function onFindOne(err, item) {
+        function saveItem() {
+            console.log(req.body.imgData)
+            item = _(item).extend(req.body);
+            item.save(function onSave(err, item) {
                 if (err) {
                     res.json(formatRespData(0, err));
                 } else {
@@ -84,35 +120,14 @@ function update (req, res) {
             });
         }
 
-        var newCarData = req.body;
-        delete newCarData.imgData;
-        if (newCarData.imgUploadId == null) {
-            saveCar();
-        } else {
-            var imgPath = path.join("/tmp", sanitize(newCarData.imgUploadId));
-            if (!fs.existsSync(imgPath)) {
-                saveCar();
-            } else {
-                // Resize the image and encode in base64
-                var imageMagick = gm.subClass({ imageMagick: true });
-                imageMagick(imgPath).resize(140).write(imgPath, function() {
-                    fs.readFile(imgPath, function(err, data) {
-                        newCarData.imgData = "data:image/jpg;base64," + new Buffer(data).toString('base64');
-                        saveCar();
-                        // Delete the uploaded file
-                        fs.unlink(imgPath);
-                    });
-                });
-            }
-        }
-
+        instance.beforeUpdate(req, res, item, saveItem);
     });
 }
 
-function del (req, res) {
+Rest.prototype.del = function(req, res) {
     var id = req.params.id;
-    var car = Car.findOne({ _id: id });
-    Car.remove({ _id: id }, function (err) {
+    //var item = this.schema.findOne({ _id: id });
+    this.schema.remove({ _id: id }, function onRemove(err) {
         if (err) {
             res.json(formatRespData(0, err));
         } else {
@@ -121,17 +136,17 @@ function del (req, res) {
     });
 }
 
-function total (req, res) {
+Rest.prototype.total = function (req, res) {
     var search = req.query.search || "";
     var re = new RegExp(search, 'i');
     var searchNumber = Number(search) || 0;
-    Car.find()
+    this.schema.find()
         .or([{ 'title': { $regex: re }},
              { 'year':  searchNumber },
              { 'mileage': searchNumber },
              { 'price': searchNumber } ])
         .count()
-        .exec(function (err, total) {
+        .exec(function onFind(err, total) {
             res.json({total: total});
         });
 }
@@ -145,6 +160,10 @@ function upload (req, res)  {
 /*******************
  * Private Methods
  *******************/
+
+function sanitize(path) {
+    return path.replace(/\.\.\//g,'');
+}
 
 function formatRespData (code, content) {
     if (typeof code === 'object') {
