@@ -4,7 +4,7 @@ var fs = require('fs');
 var path = require('path');
 var gm = require('gm'); // GraphicsMagick for node.js
 var mongoose = require('mongoose');
-var utls = require('utils');
+var util = require('util');
 
 module.exports.upload = upload;
 
