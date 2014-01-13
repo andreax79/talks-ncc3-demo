@@ -1,14 +1,14 @@
 if (!process.env.NODE_ENV)
     process.env.NODE_ENV='development'
 
-var express = require('express') // web framework
-  , http = require('http')
-  , fs = require('fs')
-  , path = require('path')
-  , reload = require('reload') // reload browser when codechanges
-  , colors = require('colors') // get colors in console
-  , db = require('./server/model/db')
-  , api = require('./server/api/cars');
+var express = require('express'); // web framework
+var http = require('http');
+var fs = require('fs');
+var path = require('path');
+var reload = require('reload'); // reload browser when codechanges
+var colors = require('colors'); // get colors in console
+var db = require('./server/model/db');
+var cars = require('./server/api/cars');
 
 var app = express();
 app.use(express.bodyParser());
@@ -38,7 +38,7 @@ app.get('/edit/:id', function(req, res) {
   res.sendfile(path.join(clientDir, 'index.html'))
 });
 
-var car = new api.Rest(app, '/api/cars', 'Car');
+var car = new cars.Car(app);
 
 var server = http.createServer(app);
 
